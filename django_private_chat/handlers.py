@@ -109,6 +109,7 @@ def gone_offline(stream):
         if session_id:
             user_owner = get_user_from_session(session_id)
             if user_owner:
+                print('User ' + user_owner.username + ' gone offline')
                 logger.debug('User ' + user_owner.username + ' gone offline')
                 # find all connections including user_owner as opponent,
                 #  send them a message that the user has gone offline
@@ -117,6 +118,9 @@ def gone_offline(stream):
                 online_opponents_sockets = [ws_connections[i] for i in online_opponents]
                 yield from fanout_message(online_opponents_sockets,
                                           {'type': 'gone-offline', 'username': user_owner.username})
+                # remove their entries from the checkers dict
+                for _, check_set in checkers.items():
+                    check_set.discard(user_owner.username)
             else:
                 pass  # invalid session id
         else:
